@@ -19,29 +19,33 @@ class IMBALANCECIFAR10(torchvision.datasets.MNIST):
         self.num_per_cls_dict = dict()
         super(IMBALANCECIFAR10, self).__init__(root, train, transform, target_transform, download)
         np.random.seed(rand_number)
-        img_num_list = self.get_img_num_per_cls(self.cls_num, imb_type, imb_factor)
         targets_np = np.array(self.targets, dtype=np.int64)
         classes = np.unique(targets_np)
-        for the_class, the_img_num in zip(classes, img_num_list):
-            self.num_per_cls_dict[the_class] = the_img_num
-        if imbalance_dataset:
-            self.gen_imbalanced_data(targets_np, classes, img_num_list)
         if add_noise:
             new_targets = self.create_noise(targets_np, noise_ratio, asym=asym_noise)
             self.targets = torch.FloatTensor(new_targets)
+        if imbalance_dataset:
+            img_num_list = self.get_img_num_per_cls(self.cls_num, imb_type, imb_factor)
+            self.gen_imbalanced_data(targets_np, classes, img_num_list)
+        img_num_list = self.get_img_num_per_cls(self.cls_num, "check", imb_factor)
+        for the_class, the_img_num in zip(classes, img_num_list):
+            self.num_per_cls_dict[the_class] = the_img_num
 
     def get_img_num_per_cls(self, cls_num, imb_type, imb_factor):
         img_max = len(self.data) / cls_num
         img_num_per_cls = []
-        if imb_type == 'exp':
+        targets_np = np.array(self.targets, dtype=np.int64)
+        if imb_type == 'check':
+            img_num_per_cls = [int(np.where(targets_np == i)[0].shape[0]) for i in range(self.cls_num)]
+        elif imb_type == 'exp':
             for cls_idx in range(cls_num):
-                num = img_max * (imb_factor**(cls_idx / (cls_num - 1.0)))
+                num = int(np.where(targets_np == cls_idx)[0].shape[0]) * (imb_factor**(cls_idx / (cls_num - 1.0)))
                 img_num_per_cls.append(int(num))
         elif imb_type == 'step':
             for cls_idx in range(cls_num // 2):
-                img_num_per_cls.append(int(img_max))
+                img_num_per_cls.append(int(np.where(targets_np == cls_idx)[0].shape[0]))
             for cls_idx in range(cls_num // 2):
-                img_num_per_cls.append(int(img_max * imb_factor))
+                img_num_per_cls.append(int(int(np.where(targets_np == cls_idx)[0].shape[0]) * imb_factor))
         else:
             img_num_per_cls.extend([int(img_max)] * cls_num)
         return img_num_per_cls
@@ -80,7 +84,7 @@ class IMBALANCECIFAR10(torchvision.datasets.MNIST):
     def create_noise(self, y_tr, noise_ratio, asym = False):
         if noise_ratio > 0:
             dataset = 'mnist'
-            noisy_y_tr = y_tr
+            noisy_y_tr = np.array(y_tr, copy=True)
             if asym:
                     data_file = "data/asym_%s_noisytrain_labels_%s.npy" % (dataset, noise_ratio)
             else:

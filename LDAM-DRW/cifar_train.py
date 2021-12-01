@@ -16,7 +16,7 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import models
 from tensorboardX import SummaryWriter
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score
 from utils import *
 from imbalance_cifar import IMBALANCECIFAR10, IMBALANCECIFAR100
 from losses import LDAMLoss, FocalLoss
@@ -40,7 +40,7 @@ parser.add_argument('--rand_number', default=0, type=int, help='fix random numbe
 parser.add_argument('--imbalance_data', default=0, type=int, help='to imbalance the training data')
 parser.add_argument('--introduce_noise', default=0, type=int, help='to introduce noise to the training data')
 parser.add_argument('--asymmetric_noise', default=0, type=int, help='to introduce asymetric noise to the training data')
-parser.add_argument('--noise_ratio', default=0, type=int, help='ratio for noise to be introduced')
+parser.add_argument('--noise_ratio', default=10, type=int, help='ratio for noise to be introduced')
 parser.add_argument('--exp_str', default='0', type=str, help='number to indicate which experiment it is')
 parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
@@ -348,6 +348,11 @@ def validate(val_loader, model, criterion, epoch, args, log=None, tf_writer=None
                     top1=top1, top5=top5))
                 print(output)
         cf = confusion_matrix(all_targets, all_preds).astype(float)
+        print("Confusion Matrix:\n", np.int32(cf))
+        precision = precision_score(all_targets, all_preds, average=None)
+        print("Precision Score: ", precision)
+        recall = recall_score(all_targets, all_preds, average=None)
+        print("Recall Score: ", recall)
         cls_cnt = cf.sum(axis=1)
         cls_hit = np.diag(cf)
         cls_acc = cls_hit / cls_cnt
