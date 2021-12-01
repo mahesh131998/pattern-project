@@ -20,6 +20,7 @@ from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, re
 from utils import *
 from imbalance_cifar import IMBALANCECIFAR10, IMBALANCECIFAR100
 from losses import LDAMLoss, FocalLoss
+from tensorflow.keras.utils import to_categorical
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -353,6 +354,9 @@ def validate(val_loader, model, criterion, epoch, args, log=None, tf_writer=None
         print("Precision Score: ", precision)
         recall = recall_score(all_targets, all_preds, average=None)
         print("Recall Score: ", recall)
+        all_preds_categorical = to_categorical(all_preds, 10)
+        roc = roc_auc_score(all_targets, all_preds_categorical, multi_class='ovr')
+        print("ROC AOC Score: ", roc)
         cls_cnt = cf.sum(axis=1)
         cls_hit = np.diag(cf)
         cls_acc = cls_hit / cls_cnt
