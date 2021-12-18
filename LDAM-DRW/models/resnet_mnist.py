@@ -1,10 +1,10 @@
 '''
-Properly implemented ResNet for CIFAR10 as described in paper [1].
+Properly implemented ResNet for MNIST as described in paper [1].
 The implementation and structure of this file is hugely influenced by [2]
 which is implemented for ImageNet and doesn't have option A for identity.
 Moreover, most of the implementations on the web is copy-paste from
 torchvision's resnet and has wrong number of params.
-Proper ResNet-s for CIFAR10 (for fair comparision and etc.) has following
+Proper ResNet-s for MNIST (for fair comparision and etc.) has following
 number of layers and parameters:
 name      | layers | params
 ResNet20  |    20  | 0.27M
@@ -69,7 +69,7 @@ class BasicBlock(nn.Module):
         if stride != 1 or in_planes != planes:
             if option == 'A':
                 """
-                For CIFAR10 ResNet paper uses option A.
+                For MNIST ResNet paper uses option A.
                 """
                 self.shortcut = LambdaLayer(lambda x:
                                             F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))

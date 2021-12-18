@@ -18,7 +18,7 @@ import models
 from tensorboardX import SummaryWriter
 from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score
 from utils import *
-from imbalance_cifar import IMBALANCECIFAR10, IMBALANCECIFAR100
+from imbalance_mnist import IMBALANCEMNIST
 from losses import LDAMLoss, FocalLoss
 from tensorflow.keras.utils import to_categorical
 
@@ -26,8 +26,8 @@ model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
-parser = argparse.ArgumentParser(description='PyTorch Cifar Training')
-parser.add_argument('--dataset', default='cifar10', help='dataset setting')
+parser = argparse.ArgumentParser(description='PyTorch Mnist Training')
+parser.add_argument('--dataset', default='mnist', help='dataset setting')
 parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet32',
                     choices=model_names,
                     help='model architecture: ' +
@@ -107,7 +107,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # create model
     print("=> creating model '{}'".format(args.arch))
-    num_classes = 100 if args.dataset == 'cifar100' else 10
+    num_classes = 100 if args.dataset == 'not-mnist' else 10
     use_norm = True if args.loss_type == 'LDAM' else False
     model = models.__dict__[args.arch](num_classes=num_classes, use_norm=use_norm)
 
@@ -155,8 +155,8 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
 
-    if args.dataset == 'cifar10':
-        train_dataset = IMBALANCECIFAR10(root='./data', imb_type=args.imb_type, imb_factor=args.imb_factor, rand_number=args.rand_number, train=True, download=True, transform=transform_train, imbalance_dataset=args.imbalance_data, add_noise=args.introduce_noise, noise_ratio=args.noise_ratio, asym_noise=args.asymmetric_noise)
+    if args.dataset == 'mnist':
+        train_dataset = IMBALANCEMNIST(root='./data', imb_type=args.imb_type, imb_factor=args.imb_factor, rand_number=args.rand_number, train=True, download=True, transform=transform_train, imbalance_dataset=args.imbalance_data, add_noise=args.introduce_noise, noise_ratio=args.noise_ratio, asym_noise=args.asymmetric_noise)
         val_dataset = datasets.MNIST(root='./data', train=False, download=True, transform=transform_val)
     else:
         warnings.warn('Dataset is not listed')
@@ -350,9 +350,9 @@ def validate(val_loader, model, criterion, epoch, args, log=None, tf_writer=None
                 print(output)
         cf = confusion_matrix(all_targets, all_preds).astype(float)
         print("Confusion Matrix:\n", np.int32(cf))
-        precision = precision_score(all_targets, all_preds, average=None)
+        precision = precision_score(all_targets, all_preds, average='micro')
         print("Precision Score: ", precision)
-        recall = recall_score(all_targets, all_preds, average=None)
+        recall = recall_score(all_targets, all_preds, average='micro')
         print("Recall Score: ", recall)
         all_preds_categorical = to_categorical(all_preds, 10)
         roc = roc_auc_score(all_targets, all_preds_categorical, multi_class='ovr')

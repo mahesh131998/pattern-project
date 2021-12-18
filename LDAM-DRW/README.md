@@ -14,7 +14,7 @@ The code is built with following libraries:
 
 ### Dataset
 
-- Imbalanced [CIFAR](https://www.cs.toronto.edu/~kriz/cifar.html). The original data will be downloaded and converted by `imbalancec_cifar.py`.
+- Imbalanced [MNIST]. The original data will be downloaded and converted by `imbalancec_mnist.py`.
 - The paper also reports results on Tiny ImageNet and iNaturalist 2018. We will update the code for those datasets later.
 
 ### Training 
@@ -24,13 +24,13 @@ We provide several training examples with this repo:
 - To train the ERM baseline on long-tailed imbalance with ratio of 100
 
 ```bash
-python cifar_train.py --gpu 0 --imb_type exp --imb_factor 0.01 --loss_type CE --train_rule None
+python mnist_train.py --gpu 0 --imb_type exp --imb_factor 0.01 --loss_type CE --train_rule None
 ```
 
 - To train the LDAM Loss along with DRW training on long-tailed imbalance with ratio of 100
 
 ```bash
-python cifar_train.py --gpu 0 --imb_type exp --imb_factor 0.01 --loss_type LDAM --train_rule DRW
+python mnist_train.py --gpu 0 --imb_type exp --imb_factor 0.01 --loss_type LDAM --train_rule DRW
 ```
 
 
